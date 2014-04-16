@@ -1,7 +1,8 @@
-import hashlib, json
+import hashlib
+import json
+import os
 #variable to hold status of user (whether they are done or not)
 working = 1
-
 #while the user is not done, continue running the program
 while working == 1:
     h = hashlib.md5()
@@ -27,7 +28,28 @@ while working == 1:
     #if user inputs command 'icheck'...
     if command == 'icheck':
         if option == '-l':
-            print("gonna list stuff")
+            if argument == "":
+                print("For option -f, please input a file name.")
+                continue
+
+            try:
+                dirContents = os.listdir(argument)
+                for file in dirContents:
+                    fileLocation = argument + "/" + file
+                    readFile = open(fileLocation, "r")
+                    contents = readFile.read().encode('utf-8')
+                    readFile.close()
+                    h.update(contents)
+                    computedHash = h.digest()
+                    jsonObj = { "Directory": argument, "Contents":
+                        {"filename": str(file), "original string": str(contents), "md5": str(computedHash)}}
+                    writeFile = open("testJsonDir.json", "a")
+                    json.dump(jsonObj, writeFile, indent=4, sort_keys=True)
+                    writeFile.close()
+
+            except OSError:
+                print("Directory not found. Make sure the directory name is correct or try a different directory.")
+
         elif option == '-f':
             if argument == "":
                 print("For option -f, please input a file name.")
@@ -39,16 +61,23 @@ while working == 1:
                 readFile.close()
                 h.update(contents)
                 computedHash = h.digest()
+                jsonObj = {"filename": str(argument), "original string": str(contents), "md5": str(computedHash)}
+                writeFile = open("testJson.json", "w")
+                json.dump(jsonObj, writeFile, indent=4, sort_keys=True)
+                writeFile.close()
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
-            jsonObj = {"filename": str(argument), "original string": str(contents), "md5": str(computedHash)}
-            writeFile = open("testJson.json", "w")
-            json.dump(jsonObj, writeFile, indent=4, sort_keys=True)
-            writeFile.close()
-
         elif option == '-t':
-            print("gonna test stuff")
+            try:
+                readFile = open(argument, "r")
+                contents = readFile.read()
+                readFile.close()
+                readJson = open("testJson.json", "r")
+                
+            except OSError:
+                print("File not found. Make sure the file name is correct or try a different file.")
+
         elif option == '-u':
             print("gonna update stuff")
         elif option == '-r':

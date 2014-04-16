@@ -1,0 +1,29 @@
+{
+    "Contents": {
+        "filename": "tFile4.txt", 
+        "md5": "b'<J\\xd6\\xfd\\xa1\\xa3\\xb7\\x0f\\x9a:A\\xd5\\xf9/<\\xcf'", 
+        "original string": "b'there is some text here to md5\\n'"
+    }, 
+    "Directory": "testDir"
+}{
+    "Contents": {
+        "filename": "tFile3.txt", 
+        "md5": "b'A\\xe3\\t\\xf8a\\xcfR\\xe9\\xb4\\xcf\\xcbg\\xa3vw,'", 
+        "original string": "b'thing are cool because I said so YA!\\n'"
+    }, 
+    "Directory": "testDir"
+}{
+    "Contents": {
+        "filename": "tFile1.txt", 
+        "md5": "b'\\x08h\\x1a\\xf0\\xbcQ$4\\xc9*g\\xc5N\\xeb\\x15r'", 
+        "original string": "b\"I'm testing stuff in file 1\\n\""
+    }, 
+    "Directory": "testDir"
+}{
+    "Contents": {
+        "filename": "tFile2.txt", 
+        "md5": "b'\\x80\\xf9\\x91\\x99\\x8c\\xa6\\xa5\\x9d\\xbe\\xcf\\x183\\xcd\\xf1\\x9e\\x94'", 
+        "original string": "b'more testing cuz ya bruh\\n'"
+    }, 
+    "Directory": "testDir"
+}
