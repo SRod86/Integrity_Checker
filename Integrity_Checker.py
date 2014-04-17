@@ -1,6 +1,44 @@
 import hashlib
 import json
 import os
+import ntpath
+
+
+def read_the_file(f_location):
+    read_file = open(f_location, "r")
+    c = read_file.read().encode('utf-8')
+    read_file.close()
+    return c
+
+
+def scan_and_hash(directory_content):
+    for f in directory_content:
+        location = argument + "/" + f
+        content = read_the_file(location)
+        comp_hash = create_hash(content)
+        json_obj = {"Directory": argument, "Contents": {"filename": str(f),
+                                                        "original string": str(content), "md5": str(comp_hash)}}
+        location = location.replace(argument, "")
+        location = location.replace(".txt", "")
+        write_to_json(location, json_obj)
+
+
+def create_hash(content):
+    key_before = "reallyBad".encode('utf-8')
+    key_after = "hashKeyAlgorithm".encode('utf-8')
+    h.update(key_before)
+    h.update(content)
+    h.update(key_after)
+    return h.hexdigest()
+
+
+def write_to_json(arg, json_obj):
+    arg = arg.replace(".txt", "")
+    storage_location = "recorded/" + str(arg) + ".json"
+    write_file = open(storage_location, "w")
+    json.dump(json_obj, write_file, indent=4, sort_keys=True)
+    write_file.close()
+
 #variable to hold status of user (whether they are done or not)
 working = 1
 #while the user is not done, continue running the program
@@ -29,23 +67,12 @@ while working == 1:
     if command == 'icheck':
         if option == '-l':
             if argument == "":
-                print("For option -f, please input a file name.")
+                print("For option -l, please input a directory name.")
                 continue
 
             try:
                 dirContents = os.listdir(argument)
-                for file in dirContents:
-                    fileLocation = argument + "/" + file
-                    readFile = open(fileLocation, "r")
-                    contents = readFile.read().encode('utf-8')
-                    readFile.close()
-                    h.update(contents)
-                    computedHash = h.digest()
-                    jsonObj = { "Directory": argument, "Contents":
-                        {"filename": str(file), "original string": str(contents), "md5": str(computedHash)}}
-                    writeFile = open("testJsonDir.json", "a")
-                    json.dump(jsonObj, writeFile, indent=4, sort_keys=True)
-                    writeFile.close()
+                scan_and_hash(dirContents)
 
             except OSError:
                 print("Directory not found. Make sure the directory name is correct or try a different directory.")
@@ -56,25 +83,32 @@ while working == 1:
                 continue
 
             try:
-                readFile = open(argument, "r")
-                contents = readFile.read().encode('utf-8')
-                readFile.close()
-                h.update(contents)
-                computedHash = h.digest()
+                contents = read_the_file(argument)
+                computedHash = create_hash(contents)
                 jsonObj = {"filename": str(argument), "original string": str(contents), "md5": str(computedHash)}
-                writeFile = open("testJson.json", "w")
-                json.dump(jsonObj, writeFile, indent=4, sort_keys=True)
-                writeFile.close()
+                write_to_json(argument, jsonObj)
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
         elif option == '-t':
             try:
-                readFile = open(argument, "r")
-                contents = readFile.read()
-                readFile.close()
-                readJson = open("testJson.json", "r")
-                
+                dirContents = os.listdir("recorded")
+                for file in dirContents:
+                    fileLocation = "recorded" + "/" + file
+                    readJson = open(fileLocation, "r")
+                    jsonObj = json.load(readJson)
+                    readJson.close()
+                    file.replace(".json", ".txt")
+                    fileLocation = "recorded" + "/" + file
+                    readFile = open(fileLocation, "r")
+                    contents = readFile.read().encode('utf-8')
+                    readFile.close()
+                    print(jsonObj)
+                    print(contents)
+                    #h.update(contents)
+                    #computedHash = h.digest()
+                    #print(computedHash)
+                    #print(jsonObj['contents']['md5'])
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
