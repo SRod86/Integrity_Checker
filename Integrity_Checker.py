@@ -242,7 +242,7 @@ while working == 1:
         print("\t-t: Tests integrity of the files with recorded MD5s")
         print("\t-u <file>: Update a file that you have modified after its integrity has been checked")
         print("\t-s: Scan all files with recorded MD5s. If a difference is found, "
-              "user is asked if they made the change.")
+              "user is asked if they made the change")
         print("\t-r <file>: Removes the .json file from the recorded MD5s\n")
 
     #if user inputs command 'exit'
