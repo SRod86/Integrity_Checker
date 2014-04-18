@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import fnmatch
+import sys
 from codecs import open
 
 
@@ -54,12 +55,29 @@ def display_record_integrity(comp_hash, json_obj, file, opt):
             json_obj = {"Directory": "Default", "Contents": {
                 "filename": str(file), "original string": str(content), "md5": str(comp_hash)},
                 "integrity": integrity}
-            write_to_json(argument, json_obj)
+            write_to_json(file, json_obj)
             print("Json file has been updated.")
-        else:
+        elif opt == "-t":
             integrity = create_hash("failure")
             json_obj["integrity"] = integrity
             write_to_json(file, json_obj)
+        elif opt == "-s":
+            user_change = input("Did you modify the file? (y/n) ")
+            if user_change.lower() == "n":
+                sys.exit("MD5s did not match.")
+            elif user_change.lower() == "y":
+                text = file.replace(".json", ".txt")
+                content = read_the_file(text)
+                comp_hash = create_hash(content)
+                integrity = create_hash("userModified")
+                json_obj = {"Directory": "Default", "Contents": {
+                    "filename": str(file), "original string": str(content), "md5": str(comp_hash)},
+                    "integrity": integrity}
+                print(argument)
+                write_to_json(file, json_obj)
+                print("Json file has been updated.")
+            else:
+                print("Invalid option. No action taken.")
 
 
 #check integrity of the file
@@ -72,7 +90,7 @@ def check_integrity(d_content, opt, arg):
         comp_hash = create_hash(f_content)
         display_record_integrity(comp_hash, json_obj, arg, opt)
 
-    elif opt == "-t":
+    elif opt == "-t" or opt == "-s":
         #d_content = directory content
         for f in d_content:
             json_obj = read_the_json(f)
@@ -200,7 +218,19 @@ while working == 1:
             check_integrity(dirContents, option, "none")
 
         elif option == '-r':
-            print("gonna remove stuff")
+            if argument == "":
+                print("For option -r, please input a file name.")
+                continue
+
+            try:
+                if ".json" in argument:
+                    argument = "recorded/" + argument
+                    os.remove(argument)
+                else:
+                    print("Invalid file type. Can not remove file.")
+            except OSError:
+                print("File not found. Make sure the file name is correct or try a different file.")
+
 
     #if user inputs command 'help'...
     elif command == 'help':
@@ -213,7 +243,7 @@ while working == 1:
         print("\t-u <file>: Update a file that you have modified after its integrity has been checked")
         print("\t-s: Scan all files with recorded MD5s. If a difference is found, "
               "user is asked if they made the change.")
-        print("\t-r <file>: Removes a file from the recorded MD5s\n")
+        print("\t-r <file>: Removes the .json file from the recorded MD5s\n")
 
     #if user inputs command 'exit'
     elif command == 'exit':
