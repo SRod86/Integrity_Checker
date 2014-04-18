@@ -1,49 +1,106 @@
 import hashlib
 import json
 import os
-import ntpath
+import fnmatch
+from codecs import open
 
 
+#opens the file, reads/encodes it, and returns the contents (c)
 def read_the_file(f_location):
-    read_file = open(f_location, "r")
-    c = read_file.read().encode('utf-8')
-    read_file.close()
+    with open(f_location, 'r', encoding="utf-8") as f:
+        c = f.read()
+
+    f.close()
     return c
 
 
-def scan_and_hash(directory_content):
+def scan_hash_json(directory_content, arg):
     for f in directory_content:
-        location = argument + "/" + f
+        location = arg + "/" + f
         content = read_the_file(location)
         comp_hash = create_hash(content)
-        json_obj = {"Directory": argument, "Contents": {"filename": str(f),
-                                                        "original string": str(content), "md5": str(comp_hash)}}
-        location = location.replace(argument, "")
-        location = location.replace(".txt", "")
+        json_obj = {"Directory": arg, "Contents": {"filename": str(f),
+                                                   "original string": str(content), "md5": str(comp_hash)}}
+        location = location.replace(arg, "")
         write_to_json(location, json_obj)
 
 
+#scans the file, creates the hash, and writes it to a json file
+def read_the_json(f):
+    f_location = "recorded" + "/" + f
+    read_json = open(f_location, "r")
+    json_obj = json.load(read_json)
+    read_json.close()
+    return json_obj
+
+
+def display_record_integrity(comp_hash, json_obj, file):
+    #if the hashes match...
+    if json_obj['Contents']['md5'] == comp_hash:
+        print(file + ": File has not been modified.")
+        integrity = create_hash("success")
+        json_obj["integrity"] = integrity
+        write_to_json(file, json_obj)
+    else:
+        print(file + ": File was modified.")
+        integrity = create_hash("failure")
+        json_obj["integrity"] = integrity
+        write_to_json(file, json_obj)
+
+
+#check integrity of the file
+def check_integrity(d_content):
+    #d_content = directory content
+    for f in d_content:
+        json_obj = read_the_json(f)
+        text = f.replace(".json", ".txt")
+        result = find(text, os.getcwd())
+        #if the result is a .json file, start the loop over
+        if 'recorded' in result:
+            continue
+
+        content = read_the_file(result)
+        comp_hash = create_hash(content)
+
+        if option == '-t':
+            display_record_integrity(comp_hash, json_obj, f)
+
+
+#find the file being searched for
+def find(pattern, path):
+    result = ""
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                result = os.path.join(root, name)
+    return result
+
+
+#create a hash for the file contents being passed in
 def create_hash(content):
+    h = hashlib.md5()
     key_before = "reallyBad".encode('utf-8')
     key_after = "hashKeyAlgorithm".encode('utf-8')
+    content = content.encode('utf-8')
     h.update(key_before)
     h.update(content)
     h.update(key_after)
     return h.hexdigest()
 
 
+#write the MD5 hash to the json file within "recorded" directory
 def write_to_json(arg, json_obj):
-    arg = arg.replace(".txt", "")
-    storage_location = "recorded/" + str(arg) + ".json"
+    arg = arg.replace(".txt", ".json")
+    storage_location = "recorded/" + str(arg)
     write_file = open(storage_location, "w")
     json.dump(json_obj, write_file, indent=4, sort_keys=True)
     write_file.close()
+
 
 #variable to hold status of user (whether they are done or not)
 working = 1
 #while the user is not done, continue running the program
 while working == 1:
-    h = hashlib.md5()
     print("Please input a command. For help type 'help'. To exit type 'exit'")
 
     #grab input from user, divide it into words, and grab the command/option/argument
@@ -72,7 +129,7 @@ while working == 1:
 
             try:
                 dirContents = os.listdir(argument)
-                scan_and_hash(dirContents)
+                scan_hash_json(dirContents, argument)
 
             except OSError:
                 print("Directory not found. Make sure the directory name is correct or try a different directory.")
@@ -85,7 +142,9 @@ while working == 1:
             try:
                 contents = read_the_file(argument)
                 computedHash = create_hash(contents)
-                jsonObj = {"filename": str(argument), "original string": str(contents), "md5": str(computedHash)}
+                jsonObj = {"Directory": "Default", "Contents": {
+                    "filename": str(argument), "original string": str(contents), "md5": str(computedHash)}}
+
                 write_to_json(argument, jsonObj)
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
@@ -93,22 +152,7 @@ while working == 1:
         elif option == '-t':
             try:
                 dirContents = os.listdir("recorded")
-                for file in dirContents:
-                    fileLocation = "recorded" + "/" + file
-                    readJson = open(fileLocation, "r")
-                    jsonObj = json.load(readJson)
-                    readJson.close()
-                    file.replace(".json", ".txt")
-                    fileLocation = "recorded" + "/" + file
-                    readFile = open(fileLocation, "r")
-                    contents = readFile.read().encode('utf-8')
-                    readFile.close()
-                    print(jsonObj)
-                    print(contents)
-                    #h.update(contents)
-                    #computedHash = h.digest()
-                    #print(computedHash)
-                    #print(jsonObj['contents']['md5'])
+                check_integrity(dirContents)
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 

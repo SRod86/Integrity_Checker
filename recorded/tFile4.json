@@ -2,7 +2,8 @@
     "Contents": {
         "filename": "tFile4.txt", 
         "md5": "86d2f531d239e34bf0e3ff2b2d96c14f", 
-        "original string": "b'there is some text here to md5\\n'"
+        "original string": "there is some text here to md5\n"
     }, 
-    "Directory": "testDir"
+    "Directory": "testDir", 
+    "integrity": "43c6ad46d6ee24cfbbeaf05b4601e91e"
 }

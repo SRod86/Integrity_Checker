@@ -1,8 +1,9 @@
 {
     "Contents": {
         "filename": "tFile3.txt", 
-        "md5": "748f47ad5b33190b9c2d035c734ad58f", 
-        "original string": "b'thing are cool because I said so YA!\\n'"
+        "md5": "70f3beef3680fe03a66710083cf652b4", 
+        "original string": "thing are cool because I said so YA!\n"
     }, 
-    "Directory": "testDir"
+    "Directory": "testDir", 
+    "integrity": "43c6ad46d6ee24cfbbeaf05b4601e91e"
 }

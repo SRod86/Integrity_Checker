@@ -1,5 +1,9 @@
 {
-    "filename": "testFile.txt", 
-    "md5": "1e8f4e6598be2ea2516102de54e7e48e", 
-    "original string": "b'I made a file to test the md5\\n'"
+    "Contents": {
+        "filename": "testFile.txt", 
+        "md5": "1e8f4e6598be2ea2516102de54e7e48e", 
+        "original string": "I made a file to test the md5\n"
+    }, 
+    "Directory": "Default", 
+    "integrity": "43c6ad46d6ee24cfbbeaf05b4601e91e"
 }

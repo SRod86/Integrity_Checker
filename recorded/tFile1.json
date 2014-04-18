@@ -1,8 +1,9 @@
 {
     "Contents": {
         "filename": "tFile1.txt", 
-        "md5": "63e00e2d95dc388ecb444a7592db2f5d", 
-        "original string": "b\"I'm testing stuff in file 1\\n\""
+        "md5": "1a11fa8239135ef9c6c473542aa730f0", 
+        "original string": "I'm testing stuff in file 1\n"
     }, 
-    "Directory": "testDir"
+    "Directory": "testDir", 
+    "integrity": "43c6ad46d6ee24cfbbeaf05b4601e91e"
 }
