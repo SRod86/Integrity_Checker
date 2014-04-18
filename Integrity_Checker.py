@@ -27,14 +27,18 @@ def scan_hash_json(directory_content, arg):
 
 #scans the file, creates the hash, and writes it to a json file
 def read_the_json(f):
-    f_location = "recorded" + "/" + f
-    read_json = open(f_location, "r")
+    if "recorded" not in f:
+        f_location = "recorded" + "/" + f
+        read_json = open(f_location, "r")
+    else:
+        read_json = open(f, "r")
+
     json_obj = json.load(read_json)
     read_json.close()
     return json_obj
 
 
-def display_record_integrity(comp_hash, json_obj, file):
+def display_record_integrity(comp_hash, json_obj, file, opt):
     #if the hashes match...
     if json_obj['Contents']['md5'] == comp_hash:
         print(file + ": File has not been modified.")
@@ -43,27 +47,40 @@ def display_record_integrity(comp_hash, json_obj, file):
         write_to_json(file, json_obj)
     else:
         print(file + ": File was modified.")
-        integrity = create_hash("failure")
-        json_obj["integrity"] = integrity
-        write_to_json(file, json_obj)
+        if opt == "-u":
+            content = read_the_file(file)
+            comp_hash = create_hash(content)
+            integrity = create_hash("userModified")
+            json_obj = {"Directory": "Default", "Contents": {
+                "filename": str(file), "original string": str(content), "md5": str(comp_hash)},
+                "integrity": integrity}
+            write_to_json(argument, json_obj)
+            print("Json file has been updated.")
+        else:
+            integrity = create_hash("failure")
+            json_obj["integrity"] = integrity
+            write_to_json(file, json_obj)
 
 
 #check integrity of the file
-def check_integrity(d_content):
-    #d_content = directory content
-    for f in d_content:
-        json_obj = read_the_json(f)
-        text = f.replace(".json", ".txt")
-        result = find(text, os.getcwd())
-        #if the result is a .json file, start the loop over
-        if 'recorded' in result:
-            continue
+def check_integrity(d_content, opt, arg):
+    if opt == "-u":
+        f_content = read_the_file(arg)
+        to_json = arg.replace(".txt", ".json")
+        result = find(to_json, os.getcwd())
+        json_obj = read_the_json(result)
+        comp_hash = create_hash(f_content)
+        display_record_integrity(comp_hash, json_obj, arg, opt)
 
-        content = read_the_file(result)
-        comp_hash = create_hash(content)
-
-        if option == '-t':
-            display_record_integrity(comp_hash, json_obj, f)
+    elif opt == "-t":
+        #d_content = directory content
+        for f in d_content:
+            json_obj = read_the_json(f)
+            text = f.replace(".json", ".txt")
+            result = find(text, os.getcwd())
+            content = read_the_file(result)
+            comp_hash = create_hash(content)
+            display_record_integrity(comp_hash, json_obj, f, opt)
 
 
 #find the file being searched for
@@ -73,6 +90,10 @@ def find(pattern, path):
         for name in files:
             if fnmatch.fnmatch(name, pattern):
                 result = os.path.join(root, name)
+                #if the result is a .json file, start the loop over
+                if '.txt' in pattern and 'recorded' in result or '.json' in pattern and '.txt' in result:
+                    continue
+
     return result
 
 
@@ -109,9 +130,12 @@ while working == 1:
 
     if len(request) == 1:
         command = request[0]
+        option = ""
+        argument = ""
     elif len(request) == 2:
         command = request[0]
         option = request[1]
+        argument = ""
     elif len(request) == 3:
         command = request[0]
         option = request[1]
@@ -144,20 +168,37 @@ while working == 1:
                 computedHash = create_hash(contents)
                 jsonObj = {"Directory": "Default", "Contents": {
                     "filename": str(argument), "original string": str(contents), "md5": str(computedHash)}}
-
                 write_to_json(argument, jsonObj)
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
         elif option == '-t':
+            dirContents = os.listdir("recorded")
+            check_integrity(dirContents, option, "none")
+
+        elif option == '-u':
+            if argument == "":
+                print("For option -u, please input a file name.")
+                continue
+            if ".txt" not in argument:
+                print("Please make sure you input the correct file name and/or full file path.")
+                continue
+
+            check_integrity("none", option, argument)
+
             try:
-                dirContents = os.listdir("recorded")
-                check_integrity(dirContents)
+                contents = read_the_file(argument)
+                computedHash = create_hash(contents)
+                jsonObj = {"Directory": "Default", "Contents": {
+                    "filename": str(argument), "original string": str(contents), "md5": str(computedHash)}}
+                write_to_json(argument, jsonObj)
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
-        elif option == '-u':
-            print("gonna update stuff")
+        elif option == '-s':
+            dirContents = os.listdir("recorded")
+            check_integrity(dirContents, option, "none")
+
         elif option == '-r':
             print("gonna remove stuff")
 
@@ -166,11 +207,13 @@ while working == 1:
         #display help screen
         print("Integrity Checker has a few options you can use. Each option "
               "must begin with the command 'icheck'. The options are as follows:")
-        print("\t-l <directory>: Reads the list of files in the directory and computes the md5 for each one")
-        print("\t-f <file>: Reads a specific file and computes its md5")
-        print("\t-t: Tests integrity of the files with recorded md5s")
+        print("\t-l <directory>: Reads the list of files in the directory and computes the MD5 for each one")
+        print("\t-f <file>: Reads a specific file and computes its MD5")
+        print("\t-t: Tests integrity of the files with recorded MD5s")
         print("\t-u <file>: Update a file that you have modified after its integrity has been checked")
-        print("\t-r <file>: Removes a file from the recorded md5s\n")
+        print("\t-s: Scan all files with recorded MD5s. If a difference is found, "
+              "user is asked if they made the change.")
+        print("\t-r <file>: Removes a file from the recorded MD5s\n")
 
     #if user inputs command 'exit'
     elif command == 'exit':
