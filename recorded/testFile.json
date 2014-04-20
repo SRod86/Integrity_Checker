@@ -1,0 +1,8 @@
+{
+    "Contents": {
+        "filename": "testFile.txt", 
+        "md5": "f29f70932b8602c76c0ca5e6d7875e57", 
+        "original string": "I am writing this to test the MD5 and stuff\n"
+    }, 
+    "Directory": "Default"
+}

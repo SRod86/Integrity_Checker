@@ -6,6 +6,56 @@ import sys
 from codecs import open
 
 
+def check_mhash():
+    d_contents = os.listdir("recorded")
+    text_mhash = "checkMaster.txt"
+    flush_file = open(text_mhash, "w")
+    flush_file.write("")
+    flush_file.close()
+    write_file = open(text_mhash, "a")
+    for f in d_contents:
+        if f == "mHash.json":
+            continue
+        json_obj = read_the_json(f)
+        md5 = json_obj['Contents']['md5']
+        write_file.write(md5)
+
+    write_file.close()
+    content = read_the_file(text_mhash)
+    comp_hash = create_hash(content)
+    json_mhash = text_mhash.replace(".txt", ".json")
+    json_obj = read_the_json("mHash.json")
+    if json_obj['Contents']['md5'] == comp_hash:
+        print("Master Hash verified")
+        integrity = create_hash("success")
+        json_obj["integrity"] = integrity
+        write_to_json(json_mhash, json_obj)
+    else:
+        print("Master Hash could not be verified.")
+
+
+def master_hash():
+    d_contents = os.listdir("recorded")
+    text_mhash = "mHash.txt"
+    flush_file = open(text_mhash, "w")
+    flush_file.write("")
+    flush_file.close()
+    write_file = open(text_mhash, "a")
+    for f in d_contents:
+        if f == "mHash.json":
+            continue
+        json_obj = read_the_json(f)
+        md5 = json_obj['Contents']['md5']
+        write_file.write(md5)
+
+    write_file.close()
+    content = read_the_file(text_mhash)
+    comp_hash = create_hash(content)
+    json_obj = {"Directory": "recorded", "Contents": {"filename": text_mhash,
+                                                      "original string": str(content), "md5": str(comp_hash)}}
+    write_to_json(text_mhash, json_obj)
+
+
 #opens the file, reads/encodes it, and returns the contents (c)
 def read_the_file(f_location):
     with open(f_location, 'r', encoding="utf-8") as f:
@@ -93,12 +143,15 @@ def check_integrity(d_content, opt, arg):
     elif opt == "-t" or opt == "-s":
         #d_content = directory content
         for f in d_content:
+            if f == "mHash.json":
+                continue
             json_obj = read_the_json(f)
             text = f.replace(".json", ".txt")
             result = find(text, os.getcwd())
             content = read_the_file(result)
             comp_hash = create_hash(content)
             display_record_integrity(comp_hash, json_obj, f, opt)
+        check_mhash()
 
 
 #find the file being searched for
@@ -129,8 +182,12 @@ def create_hash(content):
 
 #write the MD5 hash to the json file within "recorded" directory
 def write_to_json(arg, json_obj):
-    arg = arg.replace(".txt", ".json")
-    storage_location = "recorded/" + str(arg)
+    if ".txt" in arg:
+        arg = arg.replace(".txt", ".json")
+    if "recorded" not in arg:
+        storage_location = "recorded/" + str(arg)
+    else:
+        storage_location = str(arg)
     write_file = open(storage_location, "w")
     json.dump(json_obj, write_file, indent=4, sort_keys=True)
     write_file.close()
@@ -172,6 +229,7 @@ while working == 1:
             try:
                 dirContents = os.listdir(argument)
                 scan_hash_json(dirContents, argument)
+                master_hash()
 
             except OSError:
                 print("Directory not found. Make sure the directory name is correct or try a different directory.")
@@ -187,6 +245,7 @@ while working == 1:
                 jsonObj = {"Directory": "Default", "Contents": {
                     "filename": str(argument), "original string": str(contents), "md5": str(computedHash)}}
                 write_to_json(argument, jsonObj)
+                master_hash()
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
@@ -210,6 +269,7 @@ while working == 1:
                 jsonObj = {"Directory": "Default", "Contents": {
                     "filename": str(argument), "original string": str(contents), "md5": str(computedHash)}}
                 write_to_json(argument, jsonObj)
+                master_hash()
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
 
@@ -224,13 +284,14 @@ while working == 1:
 
             try:
                 if ".json" in argument:
-                    argument = "recorded/" + argument
+                    if "recorded" not in argument:
+                        argument = "recorded/" + argument
                     os.remove(argument)
+                    master_hash()
                 else:
-                    print("Invalid file type. Can not remove file.")
+                    print("Invalid file type. Can not remove MD5 record.")
             except OSError:
                 print("File not found. Make sure the file name is correct or try a different file.")
-
 
     #if user inputs command 'help'...
     elif command == 'help':
